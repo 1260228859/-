@@ -1,0 +1,58 @@
+Linux
+在Debian / Ubuntu上运行：
+apt-get install graphviz  
+
+在RedHat / Fedora上运行
+yum install graphviz
+
+下载
+pip install gprof2dot
+#########################################################################
+装饰器代码
+
+import cProfile
+import pstats
+
+PROFILING = True  # 性能分析器开关
+
+
+# 性能分析装饰器定义
+def do_cprofile(filename):
+    """
+    Decorator for function profiling.
+    """
+
+    def wrapper(func):
+        def profiled_func(*args, **kwargs):
+            # Flag for do profiling or not.
+            if PROFILING:
+                profile = cProfile.Profile()
+                profile.enable()
+                print('    性能测试中..........')
+                result = func(*args, **kwargs)
+                profile.disable()
+                print('    性能测试完毕........')
+                # Sort stat by internal time.
+                sortby = "tottime"
+                ps = pstats.Stats(profile).sort_stats(sortby)
+                ps.dump_stats(filename)
+                print('    文件已生成---『{}』'.format(filename))
+
+                p = pstats.Stats(filename)
+                print('################################分析情况####################################')
+                p.strip_dirs().sort_stats('cumtime').print_stats(10, 1.0, '.*')
+            else:
+                result = func(*args, **kwargs)
+            return result
+
+        return profiled_func
+
+    return wrapper
+
+shell中运行
+ gprof2dot -f pstats mkm_customer_export.prof | dot -Tpng -o mkm_run.png
+
+想使用linux中的KCachegrind 分析软件，那么就需要将上面生成的文件格式转换，
+安装pyprof  
+pip install pyprof2calltree
+pyprof2calltree -i mkm_customer_export.prof -k
