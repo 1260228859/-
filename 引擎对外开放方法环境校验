@@ -1,0 +1,33 @@
+# 场景如下 在编写数据处理引擎中要对外开放接口，但是涉及到文件环境、路径想进行判断，但是引擎内部又有自己的一套流程如果在方法里面封装了
+# 环境检测以便外部直接调用单独方法不会出错、这样就会照成流程在组合每个方法时都会反复去校验、所以需要一套通过对象调用单独方法时进行环境校验
+# 于是就有了以下代码 只有__event__方法中定义的方法才会去校验环境， 内部流程不去校验， 其他没必要校验的方法只要不在event中就可以
+
+class Events(object):
+    """
+        
+    """
+
+    def __getattr__(self, name):
+        print 11111, name
+        if name.startswith('__'):
+            raise AttributeError("type object '%s' has no attribute '%s'" %
+                                 (self.__class__.__name__, name))
+
+        if hasattr(self.__class__, '__events__'):
+            if name not in self.__class__.__events__:
+                raise Exception("Event '%s' is not declared" % name)
+            getattr(self.__class__, name)
+
+    def func(self, aaaaa):
+        print 11111111, aaaaa
+
+    def evankao(self):
+        print 22222
+
+
+class Ma(Events):
+    __events__ = ('on_ready', 'on_boot', 'func')
+
+
+Ma().func('123rrrrrrr')
+Ma().evankao()
